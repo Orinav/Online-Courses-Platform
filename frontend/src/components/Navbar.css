@@ -1,0 +1,28 @@
+.navbar {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  padding: 15px 0;
+  width: 100%;
+}
+
+.navbar-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #a435f0;
+  font-weight: 700;
+}
+
+.navbar-links span {
+  color: #1c1d1f;
+  font-size: 15px;
+  cursor: pointer;
+}
