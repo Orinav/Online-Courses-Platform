@@ -1,0 +1,126 @@
+.course-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.course-header {
+  margin-bottom: 30px;
+}
+
+.course-header h1 {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.course-content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* וידאו תופס 2/3, רשימה תופסת 1/3 */
+  gap: 30px;
+  align-items: start;
+}
+
+.video-wrapper {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.player-container {
+  position: relative;
+  padding-top: 56.25%; /* יחס גובה-רוחב מושלם לוידאו של 16:9 */
+  background-color: #000;
+}
+
+.react-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.video-url-display {
+  color: #2563eb;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.video-wrapper h2 {
+  padding: 20px;
+  margin: 0;
+  font-size: 20px;
+  border-top: 1px solid #d1d7dc;
+}
+
+.lessons-sidebar {
+  background: white;
+  border: 1px solid #d1d7dc;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.lessons-sidebar h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #d1d7dc;
+}
+
+.lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lesson-item-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: 1px solid #d1d7dc;
+  padding: 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.lesson-item-btn:hover {
+  background-color: #f7f9fa;
+}
+
+.lesson-item-btn.active {
+  background-color: #e6f2f5;
+  border-color: #2c3e50;
+  font-weight: bold;
+}
+
+.lesson-number {
+  background-color: #1c1d1f;
+  color: white;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-right: 15px;
+  font-size: 12px;
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 20px;
+}

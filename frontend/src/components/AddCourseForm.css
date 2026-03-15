@@ -59,3 +59,61 @@
 .submit-btn:hover {
   background-color: #3e4143;
 }
+
+.lessons-section {
+  background-color: #f7f9fa;
+  padding: 20px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border: 1px dashed #d1d7dc;
+}
+
+.lessons-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.lesson-input-group {
+  background-color: white;
+  padding: 15px;
+  border: 1px solid #d1d7dc;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.lesson-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.lesson-header h4 {
+  margin: 0;
+  color: #2563eb;
+}
+
+.remove-lesson-btn {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.add-lesson-btn {
+  background-color: transparent;
+  color: #1c1d1f;
+  border: 1px solid #1c1d1f;
+  padding: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.add-lesson-btn:hover {
+  background-color: rgba(0,0,0,0.04);
+}
