@@ -7,27 +7,54 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  role     String @default("CUSTOMER")
+  id             Int              @id @default(autoincrement())
+  email          String           @unique
+  password       String
+  role           String           @default("CUSTOMER")
+  lessonProgress LessonProgress[]
+  purchases      Purchase[] // <--- הוספנו את זה
 }
 
 model Course {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   title       String
   description String
   price       Float
-  instructor  String   @default("לא צוין")
-  imageUrl    String   @default("") // השדה החדש לתמונה!
+  instructor  String     @default("לא צוין")
+  imageUrl    String     @default("")
   lessons     Lesson[]
+  purchases   Purchase[] // <--- הוספנו את זה
 }
 
 model Lesson {
-  id              Int    @id @default(autoincrement())
+  id              Int              @id @default(autoincrement())
   title           String
   videoUrl        String
-  durationSeconds Int    @default(0)
+  durationSeconds Int              @default(0)
   courseId        Int
-  course          Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course          Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress        LessonProgress[]
+}
+
+model LessonProgress {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  lessonId  Int
+  completed Boolean @default(true)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+// המודל החדש ששומר את הרכישות!
+model Purchase {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  courseId  Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId]) // משתמש לא יכול לקנות את אותו קורס פעמיים
 }
