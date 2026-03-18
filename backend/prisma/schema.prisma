@@ -7,11 +7,10 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  role      String   @default("CUSTOMER") // Can be "CUSTOMER" or "ADMIN"
-  createdAt DateTime @default(now())
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+  role     String @default("CUSTOMER")
 }
 
 model Course {
@@ -19,13 +18,16 @@ model Course {
   title       String
   description String
   price       Float
+  instructor  String   @default("לא צוין")
+  imageUrl    String   @default("") // השדה החדש לתמונה!
   lessons     Lesson[]
 }
 
 model Lesson {
-  id       Int    @id @default(autoincrement())
-  title    String
-  videoUrl String
-  courseId Int
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id              Int    @id @default(autoincrement())
+  title           String
+  videoUrl        String
+  durationSeconds Int    @default(0)
+  courseId        Int
+  course          Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }

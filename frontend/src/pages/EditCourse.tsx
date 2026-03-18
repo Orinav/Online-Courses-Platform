@@ -1,124 +1,116 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import type { Lesson } from '../types';
-import '../components/AddCourseForm.css'; // משתמשים באותו העיצוב בדיוק!
+import '../components/AddCourseForm.css';
 
-function EditCourse() {
-  const { id } = useParams();
+interface EditCourseProps { token: string | null; onCourseUpdated: () => void; }
+
+function EditCourse({ token, onCourseUpdated }: EditCourseProps) {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [instructor, setInstructor] = useState('');
+  const [imageUrl, setImageUrl] = useState(''); // סטייט התמונה
+  const [lessons, setLessons] = useState<{title: string, videoUrl: string, durationStr: string}[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 1. ברגע שהעמוד עולה, מושכים את פרטי הקורס כדי למלא את הטופס
+  const formatSecondsToTime = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         const response = await fetch(`http://localhost:3000/api/courses/${id}`);
-        if (!response.ok) throw new Error("Course not found");
-        const data = await response.json();
-
-        setTitle(data.title);
-        setDescription(data.description);
-        setPrice(data.price.toString());
-        setLessons(data.lessons.length > 0 ? data.lessons : [{ title: '', videoUrl: '' }]);
-      } catch (error) {
-        console.error("Failed to load course", error);
-      }
+        if (response.ok) {
+          const data = await response.json();
+          setTitle(data.title); setDescription(data.description); setPrice(data.price.toString()); setInstructor(data.instructor || '');
+          setImageUrl(data.imageUrl || ''); // טעינת התמונה מהשרת
+          setLessons(data.lessons?.map((lesson: any) => ({
+            title: lesson.title, videoUrl: lesson.videoUrl, durationStr: formatSecondsToTime(lesson.durationSeconds || 0)
+          })) || []);
+        } else navigate('/');
+      } catch (error) {} finally { setLoading(false); }
     };
     fetchCourse();
-  }, [id]);
+  }, [id, navigate]);
 
-  // פונקציות לניהול מערך הסרטונים הדינמי (בדיוק כמו בהוספה)
-  const handleLessonChange = (index: number, field: 'title' | 'videoUrl', value: string) => {
+  const handleLessonChange = (index: number, field: string, value: string) => {
     const updatedLessons = [...lessons];
-    updatedLessons[index][field] = value;
+    updatedLessons[index] = { ...updatedLessons[index], [field]: value };
     setLessons(updatedLessons);
   };
 
-  const addLessonField = () => setLessons([...lessons, { title: '', videoUrl: '' }]);
-  const removeLessonField = (index: number) => setLessons(lessons.filter((_, i) => i !== index));
-
-  // 2. שמירת השינויים ושליחתם לשרת
-  const handleUpdateCourse = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(`http://localhost:3000/api/courses/${id}`, {
-        method: 'PUT', // שים לב שאנחנו משתמשים ב-PUT לעדכון
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ title, description, price: parseFloat(price), lessons }),
-      });
-
-      if (response.ok) {
-        navigate('/'); // אם הצליח, חוזרים למסך הבית
-      } else {
-        alert("Failed to update course.");
-      }
-    } catch (error) {
-      console.error("Error updating course:", error);
-    }
+  const parseTimeToSeconds = (timeStr: string): number => {
+    if (!timeStr) return 0;
+    if (!timeStr.includes(':')) return parseInt(timeStr) * 60;
+    const [mins, secs] = timeStr.split(':');
+    return (parseInt(mins) || 0) * 60 + (parseInt(secs) || 0);
   };
 
-  if (!token) return <div style={{padding: 50, textAlign: 'center'}}>Access Denied. Admins only.</div>;
+  const handleUpdateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    const processedLessons = lessons.map(l => ({
+      title: l.title, videoUrl: l.videoUrl, durationSeconds: parseTimeToSeconds(l.durationStr)
+    }));
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/courses/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ title, description, price: parseFloat(price), instructor, imageUrl, lessons: processedLessons }),
+      });
+      if (response.ok) { onCourseUpdated(); navigate('/'); }
+      else alert("עדכון הקורס נכשל.");
+    } catch (error) {}
+  };
+
+  if (loading) return <div>טוען...</div>;
 
   return (
-    <div className="app-wrapper">
-      <Navbar />
-      <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
-        <button className="back-btn" onClick={() => navigate('/')} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold' }}>&larr; Cancel Edit</button>
+    <div className="form-container" style={{ marginTop: '40px' }}>
+      <h2>עריכת קורס: {title}</h2>
+      <form onSubmit={handleUpdateCourse}>
+        <div className="input-group"><label>שם הקורס</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required /></div>
+        <div className="input-group"><label>שם המנחה</label><input type="text" value={instructor} onChange={(e) => setInstructor(e.target.value)} required /></div>
 
-        <div className="form-container" style={{ margin: 0 }}>
-          <h2>Edit Course</h2>
-          <form onSubmit={handleUpdateCourse}>
-            <div className="input-group">
-              <label>Course Title</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
-            </div>
-
-            <div className="input-group">
-              <label>Description</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
-            </div>
-
-            <div className="input-group">
-              <label>Price ($)</label>
-              <input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required />
-            </div>
-
-            <div className="lessons-section">
-              <h3>Course Lessons</h3>
-              {lessons.map((lesson, index) => (
-                <div key={index} className="lesson-input-group">
-                  <div className="lesson-header">
-                    <h4>Lesson {index + 1}</h4>
-                    {lessons.length > 1 && (
-                      <button type="button" className="remove-lesson-btn" onClick={() => removeLessonField(index)}>Remove</button>
-                    )}
-                  </div>
-                  <div className="input-group">
-                    <label>Lesson Title</label>
-                    <input type="text" value={lesson.title} onChange={(e) => handleLessonChange(index, 'title', e.target.value)} required />
-                  </div>
-                  <div className="input-group">
-                    <label>Video URL</label>
-                    <input type="url" value={lesson.videoUrl} onChange={(e) => handleLessonChange(index, 'videoUrl', e.target.value)} required />
-                  </div>
-                </div>
-              ))}
-              <button type="button" className="add-lesson-btn" onClick={addLessonField}>+ Add Another Lesson</button>
-            </div>
-
-            <button type="submit" className="submit-btn" style={{ backgroundColor: '#2563eb' }}>Save Changes</button>
-          </form>
+        {/* שדה עריכת התמונה */}
+        <div className="input-group">
+          <label>קישור לתמונת הקורס (אופציונלי)</label>
+          <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} dir="ltr" />
         </div>
-      </div>
+
+        <div className="input-group"><label>תיאור</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} required rows={4} /></div>
+        <div className="input-group"><label>מחיר</label><input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required dir="ltr" /></div>
+
+        <div className="lessons-section">
+          <h3>שיעורי הקורס</h3>
+          {lessons.map((lesson, index) => (
+            <div key={index} className="lesson-input-group">
+              <div className="lesson-header">
+                <h4>שיעור {index + 1}</h4>
+                <button type="button" className="remove-lesson-btn" onClick={() => setLessons(lessons.filter((_, i) => i !== index))}>הסר</button>
+              </div>
+              <div className="input-group"><label>כותרת השיעור</label><input type="text" value={lesson.title} onChange={(e) => handleLessonChange(index, 'title', e.target.value)} required /></div>
+              <div style={{ display: 'flex', gap: '15px' }}>
+                <div className="input-group" style={{ flex: 2 }}><label>קישור</label><input type="url" value={lesson.videoUrl} onChange={(e) => handleLessonChange(index, 'videoUrl', e.target.value)} required dir="ltr" /></div>
+                <div className="input-group" style={{ flex: 1 }}><label>אורך (MM:SS)</label><input type="text" value={lesson.durationStr} onChange={(e) => handleLessonChange(index, 'durationStr', e.target.value)} required dir="ltr" /></div>
+              </div>
+            </div>
+          ))}
+          <button type="button" className="add-lesson-btn" onClick={() => setLessons([...lessons, { title: '', videoUrl: '', durationStr: '' }])}>+ הוסף שיעור</button>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+          <button type="submit" className="submit-btn" style={{ backgroundColor: '#10b981', flex: 1 }}>שמור</button>
+          <button type="button" className="submit-btn" style={{ backgroundColor: '#6b7280', flex: 1 }} onClick={() => navigate('/')}>ביטול</button>
+        </div>
+      </form>
     </div>
   );
 }

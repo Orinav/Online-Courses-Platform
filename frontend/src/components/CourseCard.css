@@ -1,32 +1,32 @@
+/* העיצוב הכללי של הכרטיסייה */
 .course-card {
   background-color: #ffffff;
-  border: 1px solid #d1d7dc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
-  height: 100%;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
 .course-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
 .course-image-placeholder {
-  background-color: #2c3e50;
+  background-color: #374151;
   height: 160px;
-  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: 14px;
+  font-size: 1.25rem;
   font-weight: bold;
 }
 
 .course-info {
-  padding: 15px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -34,56 +34,94 @@
 
 .course-title {
   margin: 0 0 8px 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #1c1d1f;
-  line-height: 1.2;
+  font-size: 1.25rem;
+  color: #111827;
 }
 
 .course-description {
-  color: #6a6f73;
-  font-size: 13px;
-  margin: 0 0 15px 0;
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.5;
   flex-grow: 1;
 }
 
+.course-lessons-badge {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  align-self: flex-start;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* --- האזור התחתון שעבר עיצוב מחדש --- */
 .course-footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column; /* מסדר את הכפתורים והמחיר אחד מתחת לשני */
+  gap: 16px; /* מרווח יפה בין הכפתורים למחיר */
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
   margin-top: auto;
 }
 
-.course-price {
-  font-weight: 700;
-  font-size: 18px;
-  color: #1c1d1f;
+/* שורת הכפתורים */
+.course-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
 }
 
-.delete-btn {
-  background-color: transparent;
-  color: #e74c3c; /* Red color for danger actions */
-  border: 1px solid #e74c3c;
-  padding: 6px 12px;
-  font-weight: 700;
-  font-size: 13px;
+/* כל כפתור יקבל גודל שווה בזכות flex: 1 */
+.btn-view, .btn-edit, .btn-delete {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 0;
   transition: all 0.2s ease;
+  border: 1px solid transparent;
+  text-align: center;
 }
 
-.delete-btn:hover {
-  background-color: #e74c3c;
-  color: white;
+.btn-view {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+.btn-view:hover {
+  background-color: #1d4ed8;
 }
 
-.course-lessons-badge {
-  font-size: 12px;
-  color: #6a6f73;
+.btn-edit {
+  background-color: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+.btn-edit:hover {
+  background-color: #f3f4f6;
+}
+
+.btn-delete {
+  background-color: #ffffff;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.btn-delete:hover {
+  background-color: #fee2e2;
+}
+
+/* שורת המחיר - מיושרת לשמאל */
+.course-price-container {
+  display: flex;
+  justify-content: flex-end; /* שם את המחיר בצד שמאל של הכרטיסייה */
+  width: 100%;
+}
+
+.course-price {
+  font-size: 1.35rem;
   font-weight: bold;
-  margin-bottom: 15px;
-  background-color: #f7f9fa;
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
+  color: #111827;
 }

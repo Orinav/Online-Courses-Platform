@@ -26,7 +26,6 @@ function CourseDetail() {
     fetchCourse();
   }, [id]);
 
-  // Helper function to extract the standard YouTube ID and format it for an iframe
   const getEmbedUrl = (url: string) => {
     try {
       const urlObj = new URL(url);
@@ -35,14 +34,15 @@ function CourseDetail() {
     } catch { return url; }
   };
 
-  if (!course) return <div className="loading">Loading course...</div>;
+  if (!course) return <div className="loading">טוען קורס...</div>;
 
   return (
     <div className="app-wrapper">
       <Navbar />
 
       <div className="course-detail-container">
-        <button className="back-btn" onClick={() => navigate('/')}>&larr; Back to Courses</button>
+        {/* החץ שונה כדי להתאים לימין-לשמאל */}
+        <button className="back-btn" onClick={() => navigate('/')}>חזור לקורסים &rarr;</button>
 
         <div className="course-header">
           <h1>{course.title}</h1>
@@ -54,7 +54,6 @@ function CourseDetail() {
             {activeLesson ? (
               <div className="video-wrapper">
                 <div className="player-container">
-                  {/* Bulletproof Native HTML Iframe instead of ReactPlayer */}
                   <iframe
                     width="100%"
                     height="100%"
@@ -69,12 +68,12 @@ function CourseDetail() {
                 <h2>{activeLesson.title}</h2>
               </div>
             ) : (
-              <div className="no-video">No lessons available yet.</div>
+              <div className="no-video">אין עדיין שיעורים זמינים בקורס זה.</div>
             )}
           </div>
 
           <div className="lessons-sidebar">
-            <h3>Course Content</h3>
+            <h3>תוכן הקורס</h3>
             <div className="lessons-list">
               {course.lessons && course.lessons.map((lesson, index) => (
                 <button
