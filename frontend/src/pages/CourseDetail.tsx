@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Course, Lesson } from '../types';
+import './CourseDetail.css';
 
 function CourseDetail() {
   const { id } = useParams<{ id: string }>();
@@ -18,7 +19,6 @@ function CourseDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // משיכת פרטי הקורס (פתוח לכולם)
         const response = await fetch(`http://localhost:3000/api/courses/${id}`);
         if (!response.ok) { navigate('/'); return; }
 
@@ -26,13 +26,13 @@ function CourseDetail() {
         setCourse(data);
         if (data.lessons && data.lessons.length > 0) setCurrentLesson(data.lessons[0]);
 
-        // אם המשתמש מחובר, נבדוק אם יש לו גישה לקורס ואת ההתקדמות שלו
         if (token) {
           const accessRes = await fetch(`http://localhost:3000/api/purchases/check/${id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
+          let accessData = null;
           if (accessRes.ok) {
-            const accessData = await accessRes.json();
+            accessData = await accessRes.json();
             setHasAccess(accessData.hasAccess);
           }
 
@@ -56,9 +56,13 @@ function CourseDetail() {
   }, [id, navigate, token, role]);
 
   const formatTime = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   const toggleCompletion = async () => {
@@ -106,8 +110,8 @@ function CourseDetail() {
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', marginTop: '50px', fontSize: '18px' }}>טוען את הקורס...</div>;
-  if (!course) return <div style={{ textAlign: 'center', marginTop: '50px' }}>הקורס לא נמצא</div>;
+  if (loading) return <div className="loading-text">טוען את הקורס...</div>;
+  if (!course) return <div className="error-text">הקורס לא נמצא</div>;
 
   const currentIndex = course.lessons?.findIndex(l => l.id === currentLesson?.id) ?? -1;
   const hasNext = currentIndex !== -1 && currentIndex < (course.lessons?.length || 0) - 1;
@@ -118,43 +122,36 @@ function CourseDetail() {
   const handlePrevLesson = () => { if (hasPrev && course.lessons) setCurrentLesson(course.lessons[currentIndex - 1]); };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+    <div className="course-detail-container">
 
-      <div style={{ marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
-        <h1 style={{ margin: '0 0 10px 0', color: '#1f2937', fontSize: '32px' }}>{course.title}</h1>
-        <p style={{ margin: 0, color: '#6b7280', fontSize: '16px' }}>{course.description}</p>
-        <div style={{ marginTop: '10px', display: 'inline-block', backgroundColor: '#e0e7ff', color: '#4f46e5', padding: '4px 12px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold' }}>
-          מנחה: {course.instructor}
-        </div>
+      <div className="course-header">
+        <h1 className="course-title">{course.title}</h1>
+        <p className="course-description">{course.description}</p>
+        <div className="course-instructor">מנחה: {course.instructor}</div>
       </div>
 
-      <div style={{ display: 'flex', gap: '30px', flexDirection: 'row', flexWrap: 'wrap' }}>
+      <div className="course-layout">
 
-        <div style={{ flex: '1 1 65%', minWidth: '300px' }}>
-          {/* מנגנון ה-Paywall */}
+        <div className="video-section">
           {!hasAccess ? (
-            <div style={{
-              backgroundColor: '#1f2937', borderRadius: '12px', aspectRatio: '16/9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', textAlign: 'center', padding: '20px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-            }}>
-              <h2 style={{ fontSize: '28px', marginBottom: '10px' }}>תוכן סגור לצפייה 🔒</h2>
-              <p style={{ color: '#9ca3af', marginBottom: '25px', fontSize: '16px', maxWidth: '400px' }}>
-                כדי לצפות בווידאו ולגשת לכל חומרי הקורס, יש לבצע רכישה.
-              </p>
+            <div className="paywall-box">
+              <h2 className="paywall-title">תוכן סגור לצפייה 🔒</h2>
+              <p className="paywall-desc">כדי לצפות בווידאו ולגשת לכל חומרי הקורס, יש לבצע רכישה.</p>
 
-              <div style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '25px', color: '#10b981' }}>
-                ₪ {course.price}
+              <div className="paywall-price">
+                {course.price} ₪
               </div>
 
               <button
                 onClick={handlePurchase}
                 disabled={purchaseLoading}
-                style={{ backgroundColor: '#3b82f6', color: 'white', border: 'none', padding: '15px 40px', borderRadius: '8px', fontSize: '18px', fontWeight: 'bold', cursor: purchaseLoading ? 'not-allowed' : 'pointer', transition: '0.2s', boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)' }}
+                className="purchase-btn"
               >
                 {purchaseLoading ? 'מעבד רכישה...' : 'רכוש עכשיו וקבל גישה'}
               </button>
             </div>
           ) : currentLesson ? (
-            <div style={{ backgroundColor: 'black', borderRadius: '12px', overflow: 'hidden', aspectRatio: '16/9', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
+            <div className="video-container">
               {currentLesson.videoUrl.includes('youtube.com') || currentLesson.videoUrl.includes('youtu.be') ? (
                 <iframe
                   width="100%" height="100%"
@@ -169,31 +166,23 @@ function CourseDetail() {
               )}
             </div>
           ) : (
-            <div style={{ backgroundColor: '#f3f4f6', borderRadius: '12px', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
-              אין שיעורים זמינים.
-            </div>
+            <div className="no-lessons-box">אין שיעורים זמינים.</div>
           )}
 
           {hasAccess && currentLesson && (
-            <div style={{ marginTop: '20px' }}>
-              <h2 style={{ fontSize: '24px', color: '#1f2937', marginBottom: '15px' }}>{currentIndex + 1}. {currentLesson.title}</h2>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-                <button
-                  onClick={handleNextLesson} disabled={!hasNext}
-                  style={{ padding: '10px 20px', backgroundColor: hasNext ? '#3b82f6' : '#d1d5db', color: hasNext ? 'white' : '#9ca3af', border: 'none', borderRadius: '8px', cursor: hasNext ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-                >
+            <div className="lesson-info-section">
+              <h2 className="lesson-main-title">{currentIndex + 1}. {currentLesson.title}</h2>
+              <div className="lesson-controls">
+                <button onClick={handleNextLesson} disabled={!hasNext} className="nav-btn next">
                   השיעור הבא {hasNext && '←'}
                 </button>
                 <button
                   onClick={toggleCompletion}
-                  style={{ padding: '10px 20px', backgroundColor: isCurrentCompleted ? '#ecfdf5' : '#ffffff', color: isCurrentCompleted ? '#10b981' : '#6b7280', border: isCurrentCompleted ? '2px solid #10b981' : '2px solid #d1d5db', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  className={`complete-btn ${isCurrentCompleted ? 'completed' : 'not-completed'}`}
                 >
                   {isCurrentCompleted ? '✓ הושלם' : 'סמן כהושלם'}
                 </button>
-                <button
-                  onClick={handlePrevLesson} disabled={!hasPrev}
-                  style={{ padding: '10px 20px', backgroundColor: hasPrev ? '#f3f4f6' : '#f9fafb', color: hasPrev ? '#4b5563' : '#d1d5db', border: '1px solid', borderColor: hasPrev ? '#d1d5db' : '#e5e7eb', borderRadius: '8px', cursor: hasPrev ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}
-                >
+                <button onClick={handlePrevLesson} disabled={!hasPrev} className="nav-btn prev">
                   {hasPrev && '→'} קודם
                 </button>
               </div>
@@ -201,10 +190,10 @@ function CourseDetail() {
           )}
         </div>
 
-        <div style={{ flex: '1 1 30%', minWidth: '300px' }}>
-          <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '20px', backgroundColor: '#ffffff', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '20px', color: '#1f2937', borderBottom: '2px solid #f3f4f6', paddingBottom: '15px' }}>תוכן הקורס</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '500px', overflowY: 'auto', paddingLeft: '5px' }}>
+        <div className="sidebar-section">
+          <div className="lessons-card">
+            <h3 className="sidebar-title">תוכן הקורס</h3>
+            <div className="lessons-list">
               {course.lessons?.map((lesson, index) => {
                 const isActive = currentLesson?.id === lesson.id;
                 const isCompleted = lesson.id ? completedLessons.includes(lesson.id) : false;
@@ -212,31 +201,23 @@ function CourseDetail() {
                 return (
                   <div
                     key={lesson.id}
-                    onClick={() => {
-                      if (hasAccess) setCurrentLesson(lesson);
-                    }}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '8px', transition: 'all 0.2s',
-                      cursor: hasAccess ? 'pointer' : 'not-allowed',
-                      backgroundColor: isActive && hasAccess ? '#eff6ff' : '#f9fafb',
-                      border: isActive && hasAccess ? '1px solid #bfdbfe' : '1px solid #f3f4f6',
-                      opacity: hasAccess ? 1 : 0.6 // הרשימה נראית קצת אפורה כשאין גישה
-                    }}
+                    onClick={() => { if (hasAccess) setCurrentLesson(lesson); }}
+                    className={`lesson-item ${hasAccess ? 'has-access' : 'no-access'} ${isActive && hasAccess ? 'active' : 'inactive'}`}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                      <span style={{ backgroundColor: isActive && hasAccess ? '#3b82f6' : '#1f2937', color: 'white', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 'bold', fontSize: '14px', flexShrink: 0 }}>
+                    <div className="lesson-item-left">
+                      <span className={`lesson-number ${isActive && hasAccess ? 'active' : 'inactive'}`}>
                         {index + 1}
                       </span>
-                      <span style={{ fontWeight: isActive && hasAccess ? 'bold' : 'normal', color: isActive && hasAccess ? '#1e3a8a' : '#4b5563', fontSize: '15px' }}>
+                      <span className={`lesson-title ${isActive && hasAccess ? 'active' : 'inactive'}`}>
                         {lesson.title}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ fontSize: '13px', color: '#9ca3af', fontWeight: '500' }}>
+                    <div className="lesson-item-right">
+                      <div className="lesson-duration">
                         {!hasAccess && '🔒 '}
                         {formatTime(lesson.durationSeconds || 0)}
                       </div>
-                      {hasAccess && isCompleted && <div style={{ color: '#10b981', fontSize: '14px', fontWeight: 'bold' }}>✓</div>}
+                      {hasAccess && isCompleted && <div className="completed-check">✓</div>}
                     </div>
                   </div>
                 );

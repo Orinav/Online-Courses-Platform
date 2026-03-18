@@ -17,12 +17,10 @@ function App() {
   useEffect(() => {
     const verifyUserStatus = async () => {
       if (!token) return;
-
       try {
         const response = await fetch('http://localhost:3000/api/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-
         if (response.ok) {
           const userData = await response.json();
           if (userData.role !== role) {
@@ -36,7 +34,6 @@ function App() {
         console.error("Auth verification failed:", error);
       }
     };
-
     verifyUserStatus();
   }, [token, role]);
 
@@ -56,31 +53,36 @@ function App() {
   };
 
   return (
-    <div dir="rtl" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <header className="app-header" style={{ padding: '15px 30px', backgroundColor: '#1f2937', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+    <div dir="rtl" className="app-wrapper">
+      <header className="app-header">
 
-        <div>
-          {token ? (
-            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-              <span style={{ fontSize: '15px', color: '#e5e7eb' }}>
-                שלום, <span style={{ fontWeight: 'bold' }}>{role === 'ADMIN' ? 'מנהל' : 'אורח'}</span>
-              </span>
-              <button onClick={handleLogout} style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', transition: 'background-color 0.2s' }}>התנתק</button>
-            </div>
-          ) : (
-            <Link to="/login" style={{ backgroundColor: '#3b82f6', color: 'white', textDecoration: 'none', padding: '8px 20px', borderRadius: '6px', fontWeight: 'bold' }}>התחברות / הרשמה</Link>
-          )}
-        </div>
+        {/* העטיפה החדשה ששומרת את התפריט במרכז (מיושר עם הקורסים) */}
+        <div className="header-content">
 
-        <div>
-          <Link to="/" style={{ color: 'white', textDecoration: 'none', fontWeight: '900', fontSize: '28px', fontFamily: 'Arial, sans-serif', letterSpacing: '1px' }}>
-            <span style={{ color: '#60a5fa' }}>Cours</span>ori
-          </Link>
+          <div className="header-right">
+            {token ? (
+              <>
+                <span className="header-greeting">
+                  שלום, <strong>{role === 'ADMIN' ? 'מנהל' : 'אורח'}</strong>
+                </span>
+                <button onClick={handleLogout} className="logout-btn">התנתק</button>
+              </>
+            ) : (
+              <Link to="/login" className="login-btn">התחברות / הרשמה</Link>
+            )}
+          </div>
+
+          <div className="header-left">
+            <Link to="/" className="logo-link">
+              <span className="logo-blue">Cours</span>ori
+            </Link>
+          </div>
+
         </div>
 
       </header>
 
-      <main style={{ flex: 1, padding: '20px', backgroundColor: '#f9fafb' }}>
+      <main className="main-content">
         <Routes>
           <Route path="/" element={<Home token={token} role={role} />} />
           <Route path="/course/:id" element={<CourseDetail />} />

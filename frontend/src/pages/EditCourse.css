@@ -1,4 +1,4 @@
-.add-course-container {
+.edit-course-container {
   max-width: 800px;
   margin: 40px auto;
   padding: 30px;
@@ -8,7 +8,7 @@
   border: 1px solid #e5e7eb;
 }
 
-.add-course-title {
+.edit-course-title {
   font-size: 28px;
   color: #1f2937;
   margin-bottom: 30px;
@@ -39,8 +39,8 @@
 
 .form-input:focus, .form-textarea:focus {
   outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .form-textarea {
@@ -66,6 +66,7 @@
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 15px;
+  position: relative;
 }
 
 .lesson-card-header {
@@ -109,8 +110,8 @@
 }
 
 .btn-add-lesson {
-  background-color: #ecfdf5;
-  color: #059669;
+  background-color: #e0e7ff;
+  color: #4f46e5;
   border: none;
   padding: 12px 20px;
   border-radius: 8px;
@@ -123,7 +124,7 @@
 }
 
 .btn-add-lesson:hover {
-  background-color: #d1fae5;
+  background-color: #c7d2fe;
 }
 
 .form-actions {
@@ -147,7 +148,9 @@
   transition: 0.2s;
 }
 
-.btn-cancel:hover { background-color: #f3f4f6; }
+.btn-cancel:hover {
+  background-color: #f3f4f6;
+}
 
 .btn-save {
   background-color: #10b981;
@@ -161,4 +164,13 @@
   transition: 0.2s;
 }
 
-.btn-save:hover { background-color: #059669; }
+.btn-save:hover {
+  background-color: #059669;
+}
+
+.loading-text {
+  text-align: center;
+  font-size: 18px;
+  margin-top: 50px;
+  color: #6b7280;
+}

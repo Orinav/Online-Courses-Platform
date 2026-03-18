@@ -1,49 +1,97 @@
-/* Global Resets */
-body {
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap');
+
+html, body {
   margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #ffffff;
-  color: #1c1d1f;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Assistant', system-ui, -apple-system, sans-serif;
+  background-color: #f9fafb;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
 }
 
 .app-wrapper {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  background-color: #1f2937;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* המיכל החדש שמונע מהתוכן לברוח לקצוות המסך */
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-right, .header-left {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.header-left {
+  gap: 25px;
+}
+
+.header-greeting {
+  font-size: 15px;
+  color: #e5e7eb;
+}
+
+.header-greeting strong {
+  font-weight: bold;
+}
+
+.logout-btn {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #dc2626;
+}
+
+.login-btn {
+  background-color: #3b82f6;
+  color: white;
+  text-decoration: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.logo-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 28px;
+  font-family: Arial, sans-serif;
+  letter-spacing: 1px;
+}
+
+.logo-blue {
+  color: #60a5fa;
 }
 
 .main-content {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px;
-  box-sizing: border-box;
-}
-
-.section-title {
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 24px;
-}
-
-.admin-toggle-bar {
-  background-color: #f1c40f; /* Yellow warning bar */
-  padding: 10px 20px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  font-weight: bold;
-  color: #1c1d1f;
-  display: inline-block;
-}
-
-.admin-toggle-bar input {
-  margin-right: 10px;
-  cursor: pointer;
-}
-
-/* The Grid */
-.courses-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  flex: 1;
+  padding: 20px;
+  background-color: #f9fafb;
 }

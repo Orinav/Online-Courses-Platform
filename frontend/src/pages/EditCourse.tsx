@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../components/AddCourseForm.css';
+import './EditCourse.css';
 
-interface EditCourseProps { token: string | null; onCourseUpdated: () => void; }
+interface EditCourseProps {
+  token: string | null;
+  onCourseUpdated: () => void;
+}
+
+interface FormLesson {
+  id?: number;
+  title: string;
+  videoUrl: string;
+  durationString: string;
+}
 
 function EditCourse({ token, onCourseUpdated }: EditCourseProps) {
   const { id } = useParams<{ id: string }>();
@@ -10,16 +20,31 @@ function EditCourse({ token, onCourseUpdated }: EditCourseProps) {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
+  const [price, setPrice] = useState<number>(0);
   const [instructor, setInstructor] = useState('');
-  const [imageUrl, setImageUrl] = useState(''); // סטייט התמונה
-  const [lessons, setLessons] = useState<{title: string, videoUrl: string, durationStr: string}[]>([]);
+  const [imageUrl, setImageUrl] = useState('');
+  const [lessons, setLessons] = useState<FormLesson[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const formatSecondsToTime = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const formatSecondsToTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) {
+      return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const parseTimeToSeconds = (timeStr: string) => {
+    if (!timeStr) return 0;
+    const parts = timeStr.split(':').map(p => parseInt(p) || 0);
+    if (parts.length === 3) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2) {
+      return parts[0] * 60 + parts[1];
+    }
+    return parts[0] || 0;
   };
 
   useEffect(() => {
@@ -27,88 +52,154 @@ function EditCourse({ token, onCourseUpdated }: EditCourseProps) {
       try {
         const response = await fetch(`http://localhost:3000/api/courses/${id}`);
         if (response.ok) {
-          const data = await response.json();
-          setTitle(data.title); setDescription(data.description); setPrice(data.price.toString()); setInstructor(data.instructor || '');
-          setImageUrl(data.imageUrl || ''); // טעינת התמונה מהשרת
-          setLessons(data.lessons?.map((lesson: any) => ({
-            title: lesson.title, videoUrl: lesson.videoUrl, durationStr: formatSecondsToTime(lesson.durationSeconds || 0)
-          })) || []);
-        } else navigate('/');
-      } catch (error) {} finally { setLoading(false); }
+          const course = await response.json();
+          setTitle(course.title);
+          setDescription(course.description);
+          setPrice(course.price);
+          setInstructor(course.instructor || '');
+          setImageUrl(course.imageUrl || '');
+
+          const formattedLessons = course.lessons.map((l: any) => ({
+            id: l.id,
+            title: l.title,
+            videoUrl: l.videoUrl,
+            durationString: formatSecondsToTime(l.durationSeconds || 0)
+          }));
+          setLessons(formattedLessons);
+        } else {
+          alert('הקורס לא נמצא');
+          navigate('/');
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchCourse();
   }, [id, navigate]);
 
-  const handleLessonChange = (index: number, field: string, value: string) => {
-    const updatedLessons = [...lessons];
-    updatedLessons[index] = { ...updatedLessons[index], [field]: value };
-    setLessons(updatedLessons);
-  };
-
-  const parseTimeToSeconds = (timeStr: string): number => {
-    if (!timeStr) return 0;
-    if (!timeStr.includes(':')) return parseInt(timeStr) * 60;
-    const [mins, secs] = timeStr.split(':');
-    return (parseInt(mins) || 0) * 60 + (parseInt(secs) || 0);
-  };
-
-  const handleUpdateCourse = async (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token) return alert('נא להתחבר');
 
-    const processedLessons = lessons.map(l => ({
-      title: l.title, videoUrl: l.videoUrl, durationSeconds: parseTimeToSeconds(l.durationStr)
+    const formattedLessons = lessons.map(l => ({
+      title: l.title,
+      videoUrl: l.videoUrl,
+      durationSeconds: parseTimeToSeconds(l.durationString)
     }));
 
     try {
       const response = await fetch(`http://localhost:3000/api/courses/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ title, description, price: parseFloat(price), instructor, imageUrl, lessons: processedLessons }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, description, price, instructor, imageUrl, lessons: formattedLessons })
       });
-      if (response.ok) { onCourseUpdated(); navigate('/'); }
-      else alert("עדכון הקורס נכשל.");
-    } catch (error) {}
+      if (response.ok) {
+        alert('הקורס עודכן בהצלחה!');
+        onCourseUpdated();
+      } else {
+        alert('שגיאה בעדכון הקורס');
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  if (loading) return <div>טוען...</div>;
+  const handleLessonChange = (index: number, field: keyof FormLesson, value: string) => {
+    const newLessons = [...lessons];
+    newLessons[index][field] = value as never;
+    setLessons(newLessons);
+  };
+
+  const addLesson = () => {
+    setLessons([...lessons, { title: '', videoUrl: '', durationString: '00:00' }]);
+  };
+
+  const removeLesson = (index: number) => {
+    const newLessons = [...lessons];
+    newLessons.splice(index, 1);
+    setLessons(newLessons);
+  };
+
+  if (loading) return <div className="loading-text">טוען נתונים...</div>;
 
   return (
-    <div className="form-container" style={{ marginTop: '40px' }}>
-      <h2>עריכת קורס: {title}</h2>
-      <form onSubmit={handleUpdateCourse}>
-        <div className="input-group"><label>שם הקורס</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required /></div>
-        <div className="input-group"><label>שם המנחה</label><input type="text" value={instructor} onChange={(e) => setInstructor(e.target.value)} required /></div>
+    <div className="edit-course-container">
+      <h2 className="edit-course-title">עריכת קורס</h2>
 
-        {/* שדה עריכת התמונה */}
-        <div className="input-group">
-          <label>קישור לתמונת הקורס (אופציונלי)</label>
-          <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} dir="ltr" />
+      <form onSubmit={handleUpdate}>
+        <div className="form-group">
+          <label className="form-label">שם הקורס</label>
+          <input className="form-input" type="text" value={title} onChange={e => setTitle(e.target.value)} required />
         </div>
 
-        <div className="input-group"><label>תיאור</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} required rows={4} /></div>
-        <div className="input-group"><label>מחיר</label><input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} required dir="ltr" /></div>
+        <div className="form-group">
+          <label className="form-label">תיאור הקורס</label>
+          <textarea className="form-textarea" value={description} onChange={e => setDescription(e.target.value)} required />
+        </div>
+
+        <div className="lesson-inputs-row">
+          <div className="form-group">
+            <label className="form-label">מחיר (₪)</label>
+            <input className="form-input" type="number" value={price} onChange={e => setPrice(Number(e.target.value))} required />
+          </div>
+          <div className="form-group">
+            <label className="form-label">שם המנחה</label>
+            <input className="form-input" type="text" value={instructor} onChange={e => setInstructor(e.target.value)} placeholder="לדוגמה: אורי" />
+          </div>
+        </div>
+
+        <div className="form-group" style={{ marginTop: '20px' }}>
+          <label className="form-label">קישור לתמונה מקדימה</label>
+          <input className="form-input" type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="URL לתמונה מיוטיוב או מהרשת" />
+        </div>
 
         <div className="lessons-section">
-          <h3>שיעורי הקורס</h3>
+          <h3 className="lessons-title">רשימת שיעורים</h3>
+
           {lessons.map((lesson, index) => (
-            <div key={index} className="lesson-input-group">
-              <div className="lesson-header">
-                <h4>שיעור {index + 1}</h4>
-                <button type="button" className="remove-lesson-btn" onClick={() => setLessons(lessons.filter((_, i) => i !== index))}>הסר</button>
+            <div key={index} className="lesson-card">
+              <div className="lesson-card-header">
+                <h4 className="lesson-card-title">שיעור {index + 1}</h4>
+                <button type="button" onClick={() => removeLesson(index)} className="btn-remove-lesson">
+                  הסר שיעור
+                </button>
               </div>
-              <div className="input-group"><label>כותרת השיעור</label><input type="text" value={lesson.title} onChange={(e) => handleLessonChange(index, 'title', e.target.value)} required /></div>
-              <div style={{ display: 'flex', gap: '15px' }}>
-                <div className="input-group" style={{ flex: 2 }}><label>קישור</label><input type="url" value={lesson.videoUrl} onChange={(e) => handleLessonChange(index, 'videoUrl', e.target.value)} required dir="ltr" /></div>
-                <div className="input-group" style={{ flex: 1 }}><label>אורך (MM:SS)</label><input type="text" value={lesson.durationStr} onChange={(e) => handleLessonChange(index, 'durationStr', e.target.value)} required dir="ltr" /></div>
+
+              <div className="form-group">
+                <label className="form-label">כותרת השיעור</label>
+                <input className="form-input" type="text" value={lesson.title} onChange={e => handleLessonChange(index, 'title', e.target.value)} required />
+              </div>
+
+              <div className="lesson-inputs-row">
+                <div className="form-group">
+                  <label className="form-label">קישור לווידאו</label>
+                  <input className="form-input" type="text" value={lesson.videoUrl} onChange={e => handleLessonChange(index, 'videoUrl', e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">אורך</label>
+                  <input className="form-input" type="text" placeholder="1:02:47 או 22:03" value={lesson.durationString} onChange={e => handleLessonChange(index, 'durationString', e.target.value)} required />
+                </div>
               </div>
             </div>
           ))}
-          <button type="button" className="add-lesson-btn" onClick={() => setLessons([...lessons, { title: '', videoUrl: '', durationStr: '' }])}>+ הוסף שיעור</button>
+
+          <button type="button" onClick={addLesson} className="btn-add-lesson">
+            + הוסף שיעור
+          </button>
         </div>
-        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-          <button type="submit" className="submit-btn" style={{ backgroundColor: '#10b981', flex: 1 }}>שמור</button>
-          <button type="button" className="submit-btn" style={{ backgroundColor: '#6b7280', flex: 1 }} onClick={() => navigate('/')}>ביטול</button>
+
+        <div className="form-actions">
+          <button type="button" onClick={() => navigate('/')} className="btn-cancel">
+            ביטול
+          </button>
+          <button type="submit" className="btn-save">
+            שמור שינויים
+          </button>
         </div>
       </form>
     </div>
