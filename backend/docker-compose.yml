@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: coursori_db
+    restart: always
+    environment:
+      POSTGRES_USER: coursori_user
+      POSTGRES_PASSWORD: coursori_password
+      POSTGRES_DB: courses_db
+    ports:
+      # הפורט השמאלי (5433) הוא זה שיחשף למחשב שלך כדי למנוע התנגשות עם ה-Postgres הישן
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
